@@ -8,7 +8,7 @@ projects: [spring-boot]
 
 = Spring Boot in a Container
 
-Many people are using containers to wrap their Spring Boot applications, and building containers is not a simple thing to do. This is a guide for developers of Spring Boot applications. Containers are not a good abstraction for developers - they force you to learn about and think about very low level concerns - but you will on occasion be called on to create or use a container, so it pays to understand the building blocks. Here we aim to show you some of the choices you can make if you are faced with the prospect of needing to create your own container.
+Many people are using containers to wrap their Spring Boot applications, and building containers is not a simple thing to do. This is a guide for developers of Spring Boot applications, and containers are not always a good abstraction for developers - they force you to learn about and think about very low level concerns - but you will on occasion be called on to create or use a container, so it pays to understand the building blocks. Here we aim to show you some of the choices you can make if you are faced with the prospect of needing to create your own container.
 
 We will assume that you know how to create and build a basic Spring Boot application. If you don't, go to one of the https://spring.io/guides[Getting Started Guides], for example the one on building a https://spring.io/guides/gs/rest-service/[REST Service]. Copy the code from there and practise with some of the ideas below.
 
