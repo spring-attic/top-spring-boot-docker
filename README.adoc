@@ -180,7 +180,7 @@ For really basic usage it will work out of the box with no extra configuration:
 ```
 $ mvn com.spotify:dockerfile-maven-plugin:build
 ...
-[INFO] Building Docker context /home/dsyer/dev/demo/workspace/gs-spring-boot-docker-complete
+[INFO] Building Docker context /home/dsyer/dev/demo/workspace/myapp
 [INFO] 
 [INFO] Image will be built without a name
 [INFO] 
@@ -426,7 +426,7 @@ $ docker run -p 8080:8080 myorg/myapp
  =========|_|==============|___/=/_/_/_/
  :: Spring Boot ::        (v2.0.5.RELEASE)
 
-2018-11-07 09:41:06.390  INFO 1 --- [           main] hello.Application                        : Starting Application on 1989fb9a00a4 with PID 1 (/workspace/app/BOOT-INF/classes started by pack in /workspace/app)
+2018-11-07 09:41:06.390  INFO 1 --- [main] hello.Application: Starting Application on 1989fb9a00a4 with PID 1 (/workspace/app/BOOT-INF/classes started by pack in /workspace/app)
 ...
 ```
 
