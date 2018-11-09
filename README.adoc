@@ -75,8 +75,6 @@ Nov 06, 2018 2:45:16 PM org.springframework.boot.SpringApplication logStartupPro
 ...
 ```
 
-Notice that the base image is `openjdk:8-jdk-alpine`. The `alpine` images are smaller than the standard `openjdk` library images from https://hub.docker.com/_/openjdk/[Dockerhub]. There is no official alpine image for Java 11 yet (AdoptOpenJDK had one for a while but it no longer appears on their https://hub.docker.com/r/adoptopenjdk/openjdk11/[Dockerhub page]).
-
 If you want to poke around inside the image you can open a shell in it like this (the base image does not have `bash`):
 
 ```
@@ -89,13 +87,21 @@ bin      etc      lib      mnt      root     sbin     sys      usr
 
 The docker configuration is very simple so far, and the generated image is not very efficient. The docker image has a single filesystem layer with the fat jar in it, and every change we make to the application code changes that layer, which might be 10MB or more (even as much as 50MB for some apps). We can improve on that by splitting the JAR up into multiple layers.
 
+=== Smaller Images
+
+Notice that the base image in the example above is `openjdk:8-jdk-alpine`. The `alpine` images are smaller than the standard `openjdk` library images from https://hub.docker.com/_/openjdk/[Dockerhub]. There is no official alpine image for Java 11 yet (AdoptOpenJDK had one for a while but it no longer appears on their https://hub.docker.com/r/adoptopenjdk/openjdk11/[Dockerhub page]). You can also save about 20MB in the base image by using the "jre" label instead of "jdk". Not all apps work with a JRE (as opposed to a JDK), but most do, and indeed some organizations enforce a rule that every app has to because of the risk of misuse of some of the JDK features (like compilation).
+
+Another trick that could get you a smaller image is to use https://openjdk.java.net/projects/jigsaw/quick-start#linker[JLink], which is bundled with OpenJDK 11. JLink allows you to build a custom JRE distribution from a subset of modules in the full JDK, so you don't need a JRE or JDK in the base image. In principle this would get you a smaller total image size than using the `openjdk` official docker images. In practice, you won't (yet) be able to use the `alpine` base image with JDK 11, so your choice of base image will be limited and will probably result in a larger final image size. Also, a custom JRE in your own base image cannot be shared amongst other applications, since they would need different customizations. So you might have smaller images for all your applications, but they still take longer to start because they don't benefit from caching the JRE layer.
+
+That last point highlights a really important concern for image builders: the goal is not necessarily always going to be to build the smallest image possible. Smaller images are generally a good idea because they take less time to upload and download, but only if none of the layers in them are already cached. Image registries are quite sophisticated these days and you can easily lose the benefit of those features by trying to be clever with the image construction. If you use common base layers, the total size of an image is less of a concern, and will probably become even less of one as the registries and platforms evolve. Having said that, it is still important, and useful, to try and optimize the layers in our application image, but the goal should always be to put the fastest changing stuff in the highest layers, and to share as many of the large, lower layers as possible with other applications.
+
 == A Better Dockerfile
 
 A Spring Boot fat jar naturally has "layers" because of the way that the jar itself is packaged. If we unpack it first it will already be divided into external and internal dependencies. To do this in one step in the docker build, we need to unpack the jar first. For example (sticking with Maven, but the Gradle version is pretty similar):
 
 ```
 $ mkdir target/dependency
-$ (cd target/dependency; tar -zxf ../*.jar)
+$ (cd target/dependency; jar -xf ../*.jar)
 $ docker build -t myorg/myapp .
 ```
 
