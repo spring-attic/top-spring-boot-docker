@@ -173,6 +173,58 @@ Notice that the source code has been split into 4 layers. The later layers conta
 
 Every build where the source code changes will be slow because the Maven cache has to be re-created in the first `RUN` section. But you have a completely standalone build that anyone can run to get your application running as long as they have docker. That can be quite useful in some environments, e.g. where you need to share your code with people who don't know Java.
 
+=== Experimental Features
+
+Docker 18.06 comes with some https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/experimental.md["experimental" features] that includes a way to cache build dependencies. To switch them on you need a flag in the daemon (`dockerd`) and also an environment variable when you run the client, and then you can add a magic first line to your `Dockerfile`:
+
+`Dockerfile`
+[source]
+----
+# syntax=docker/dockerfile:experimental
+----
+
+and the `RUN` directive then accepts a new flag `--mount`. Here's a full example:
+
+
+`Dockerfile`
+[source]
+----
+# syntax=docker/dockerfile:experimental
+FROM openjdk:8-jdk-alpine as build
+WORKDIR /workspace/app
+
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+COPY src src
+ARG HOME
+
+RUN --mount=type=cache,target=/root/.m2 ./mvnw install -DskipTests
+RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
+
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ARG DEPENDENCY=/workspace/app/target/dependency
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+ENTRYPOINT ["java","-cp","app:app/lib/*","hello.Application"]
+----
+
+Then run it:
+
+```
+$ DOCKER_BUILDKIT=1 docker build -t myorg/myapp .
+...
+ => /bin/sh -c ./mvnw install -DskipTests              5.7s
+ => exporting to image                                 0.0s
+ => => exporting layers                                0.0s
+ => => writing image sha256:3defa...
+ => => naming to docker.io/myorg/myapp
+```
+
+With the experimental features you get a different output on the console, but you can see that a Maven build now only takes a few seconds instead of minutes, once the cache is warm.
+
 == Build Plugins
 
 If you don't want to call `docker` directly in your build, there is quite a rich set of plugins for Maven and Gradle that can do that work for you. Here are just a few.
