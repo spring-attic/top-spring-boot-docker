@@ -225,6 +225,8 @@ $ DOCKER_BUILDKIT=1 docker build -t myorg/myapp .
 
 With the experimental features you get a different output on the console, but you can see that a Maven build now only takes a few seconds instead of minutes, once the cache is warm.
 
+NOTE: While these features are in the experimental phase, the options for switching buildkit on and off depend on the version of `docker` that you are using. Check the documentation for the version you have (the example above is correct for `docker` 18.0.6).
+
 == Build Plugins
 
 If you don't want to call `docker` directly in your build, there is quite a rich set of plugins for Maven and Gradle that can do that work for you. Here are just a few.
