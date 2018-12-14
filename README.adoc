@@ -138,7 +138,7 @@ with `spring.config.location` (command line argument or System property etc.).
 (that will slow down the JIT later at the expense of the saved startup time).
 * Use the container memory hints for Java 8: `-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap`. With Java 11 this is automatic by default.
 
-Your app might not need a full CPU at runtime, but it will need multiple CPUs to start up as quickly as possible (at least 2, 4 are better). If you don't mind a slower startup you could throttle the CPUs down below 4.
+Your app might not need a full CPU at runtime, but it will need multiple CPUs to start up as quickly as possible (at least 2, 4 are better). If you don't mind a slower startup you could throttle the CPUs down below 4. If you are forced to start with less than 4 CPUs it might help to set `-Dspring.backgroundpreinitializer.ignore=true` since it prevents Spring Boot from creating a new thread that it probably won't be able to use (this works with Spring Boot 2.1.0 and above).
 
 == Multi-Stage Build
 
@@ -197,7 +197,6 @@ COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 COPY src src
-ARG HOME
 
 RUN --mount=type=cache,target=/root/.m2 ./mvnw install -DskipTests
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
