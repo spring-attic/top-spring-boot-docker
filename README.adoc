@@ -31,13 +31,13 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 The `JAR_FILE` could be passed in as part of the `docker` command (it will be different for Maven and Gradle). E.g. for Maven:
 
 ```
-$ docker build --build-args=target/*.jar -t myorg/myapp .
+$ docker build --build-arg=target/*.jar -t myorg/myapp .
 ```
 
 and for Gradle:
 
 ```
-$ docker build --build-args=build/libs/*.jar -t myorg/myapp .
+$ docker build --build-arg=build/libs/*.jar -t myorg/myapp .
 ```
 
 Of course, once you have chosen a build system, you don't need the `ARG` - you can just hard code the jar location. E.g. for Maven:
