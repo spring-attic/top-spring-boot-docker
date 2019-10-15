@@ -226,6 +226,26 @@ With the experimental features you get a different output on the console, but yo
 
 NOTE: While these features are in the experimental phase, the options for switching buildkit on and off depend on the version of `docker` that you are using. Check the documentation for the version you have (the example above is correct for `docker` 18.0.6).
 
+== Security Aspects
+
+Just as in classic VM-deployments, processes should not be run with root permissions. Instead the image should contain a non-root user that runs the app.
+
+This can be achieved by adding another layer that adds a (system) user and group, then set it as the current user (instead of the default, root):
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+
+RUN groupadd -r mygroup && \
+    useradd -r -g mygroup myuser
+USER myuser
+
+... <continue Dockerfile>
+----
+
+In case someone manages to break out of your app and run system commands inside the container, this will limit their capabilities (principle of least privilege).
+
 == Build Plugins
 
 If you don't want to call `docker` directly in your build, there is quite a rich set of plugins for Maven and Gradle that can do that work for you. Here are just a few.
@@ -240,7 +260,27 @@ For really basic usage it will work out of the box with no extra configuration:
 $ mvn com.spotify:dockerfile-maven-plugin:build
 ...
 [INFO] Building Docker context /home/dsyer/dev/demo/workspace/myapp
-[INFO] 
+
+== Security Aspects
+
+As in classic VM-deployments, processes should not be run with root permissions. Instead the image should contain a non-root user that runs the app.
+
+This can be achieved by adding another layer that adds a (system) user and group, then set it as the current user (instead of the default, root):
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+
+RUN groupadd -r mygroup && \
+    useradd -r -g mygroup myuser
+USER myuser
+
+... <continue Dockerfile>
+----
+
+In case someone manages to break out of your app and run system commands inside the container, this will limit their capabilities (principle of least privilege).
+e[INFO] 
 [INFO] Image will be built without a name
 [INFO] 
 ...
