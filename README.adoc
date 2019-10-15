@@ -246,6 +246,8 @@ USER myuser
 
 In case someone manages to break out of your app and run system commands inside the container, this will limit their capabilities (principle of least privilege).
 
+Hint: some of the further `Dockerfile` commands only work as root, so maybe you have to move the USER command further down (e.g. if you plan to install more packages into the container, which only works as root)
+
 == Build Plugins
 
 If you don't want to call `docker` directly in your build, there is quite a rich set of plugins for Maven and Gradle that can do that work for you. Here are just a few.
