@@ -237,16 +237,15 @@ This can be achieved by adding another layer that adds a (system) user and group
 ----
 FROM openjdk:8-jdk-alpine
 
-RUN groupadd -r mygroup && \
-    useradd -r -g mygroup myuser
-USER myuser
+RUN addgroup -S demo && adduser -S demo -G demo
+USER demo
 
-... <continue Dockerfile>
+...
 ----
 
 In case someone manages to break out of your app and run system commands inside the container, this will limit their capabilities (principle of least privilege).
 
-Hint: some of the further `Dockerfile` commands only work as root, so maybe you have to move the USER command further down (e.g. if you plan to install more packages into the container, which only works as root)
+NOTE: some of the further `Dockerfile` commands only work as root, so maybe you have to move the USER command further down (e.g. if you plan to install more packages into the container, which only works as root)
 
 == Build Plugins
 
