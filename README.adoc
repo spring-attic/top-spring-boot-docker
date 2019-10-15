@@ -230,7 +230,7 @@ NOTE: While these features are in the experimental phase, the options for switch
 
 Just as in classic VM-deployments, processes should not be run with root permissions. Instead the image should contain a non-root user that runs the app.
 
-This can be achieved by adding another layer that adds a (system) user and group, then set it as the current user (instead of the default, root):
+In a `Dockerfile`, this can be achieved by adding another layer that adds a (system) user and group, then set it as the current user (instead of the default, root):
 
 `Dockerfile`
 [source]
@@ -245,7 +245,9 @@ USER demo
 
 In case someone manages to break out of your app and run system commands inside the container, this will limit their capabilities (principle of least privilege).
 
-NOTE: some of the further `Dockerfile` commands only work as root, so maybe you have to move the USER command further down (e.g. if you plan to install more packages into the container, which only works as root)
+NOTE: Some of the further `Dockerfile` commands only work as root, so maybe you have to move the USER command further down (e.g. if you plan to install more packages into the container, which only works as root).
+
+NOTE: Other approaches, not using a `Dockerfile`, might be more amenable. For instance, in the buildpack approach described later, most implementations will use a non-root user by default.
 
 == Build Plugins
 
