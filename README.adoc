@@ -336,7 +336,7 @@ Example with Maven (without changing the `pom.xml`):
 $ mvn com.google.cloud.tools:jib-maven-plugin:build -Dimage=myorg/myapp
 ```
 
-To run the above command you will need to have permission to push to Dockerhub under the `myorg` repository prefix. If you have authenticated with `docker` on the command line, that will work from your local `~/.docker` configuration. You can also set up a Maven "server" authentication in your `~/.m2/settings.xml` (the `id` of the repository ios significant):
+To run the above command you will need to have permission to push to Dockerhub under the `myorg` repository prefix. If you have authenticated with `docker` on the command line, that will work from your local `~/.docker` configuration. You can also set up a Maven "server" authentication in your `~/.m2/settings.xml` (the `id` of the repository is significant):
 
 `settings.xml`
 [source]
