@@ -476,8 +476,8 @@ The output from a buildpack lifecycle is a container image, but you don't need d
 To give you an idea of the features of a buildpack here is an example using the https://github.com/buildpack/pack[Pack CLI] from the command line (it would work with the sample app we have been using in thus guide, no need for a `Dockerfile` or any special build configuration):
 
 ```
-$ pack build myorg/myapp --builder=nebhale/java-build --path=.
-2018/11/07 09:54:48 Pulling builder image 'nebhale/java-build' (use --no-pull flag to skip this step)
+$ pack build myorg/myapp --builder=cloudfoundry/cnb:bionic --path=.
+2018/11/07 09:54:48 Pulling builder image 'cloudfoundry/cnb:bionic' (use --no-pull flag to skip this step)
 2018/11/07 09:54:49 Selected run image 'packs/run' from stack 'io.buildpacks.stacks.bionic'
 2018/11/07 09:54:49 Pulling run image 'packs/run' (use --no-pull flag to skip this step)
 *** DETECTING:
@@ -512,7 +512,9 @@ $ docker run -p 8080:8080 myorg/myapp
 ...
 ```
 
-The `--builder` is a docker image that runs the buildpack lifecycle - typically it would be a shared resource for all developers, or all developers on a single platform. This one is work in progress from Ben Hale, who maintains the older buildpacks for Cloud Foundry and is now working on the new generation. The output in this case went to the local docker daemon, but in an automation platform it could be a docker registry. Once the `pack` CLI reaches a stable release the default builder will probably do the same thing.
+The `--builder` is a docker image that runs the buildpack lifecycle - typically it would be a shared resource for all developers, or all developers on a single platform. You can set the default builder on the command line (creates a file in `~/.pack`) and then omit that flag from subsequesnt builds.
+
+NOTE: the `cloudfoundry/cnb:bionic` builder also knows how to build an image from an executable jar file, so you can build using `mvnw` first and then point the `--path` to the jar file for the same result.
 
 == Knative
 
