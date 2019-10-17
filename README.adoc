@@ -514,7 +514,7 @@ $ docker run -p 8080:8080 myorg/myapp
 
 The `--builder` is a docker image that runs the buildpack lifecycle - typically it would be a shared resource for all developers, or all developers on a single platform. You can set the default builder on the command line (creates a file in `~/.pack`) and then omit that flag from subsequesnt builds.
 
-NOTE: the `cloudfoundry/cnb:bionic` builder also knows how to build an image from an executable jar file, so you can build using `mvnw` first and then point the `--path` to the jar file for the same result.
+NOTE: The `cloudfoundry/cnb:bionic` builder also knows how to build an image from an executable jar file, so you can build using `mvnw` first and then point the `--path` to the jar file for the same result.
 
 == Knative
 
