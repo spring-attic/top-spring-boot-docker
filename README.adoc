@@ -85,6 +85,146 @@ bin      etc      lib      mnt      root     sbin     sys      usr
 / #
 ```
 
+NOTE: The alpine base container we used in the example does not have `bash`, so this is an `ash` shell. It has some of the features of `bash` but not all.
+
+If you have a running container and you want to peek into it, use `docker exec` you can do this:
+
+```
+$ docker run --name myapp -ti --entrypoint /bin/sh myorg/myapp
+$ docker exec -ti myapp /bin/sh
+/ #
+```
+
+where `myapp` is the `--name` passed to the `docker run` command. If you didn't use `--name` then docker assigns a mnemonic name which you can scrape from the output of `docker ps`. You could also use the sha identifier of the container instead of the name, also visible from `docker ps`.
+
+=== The Entry Point
+
+The https://docs.docker.com/engine/reference/builder/#exec-form-entrypoint-example[exec form] of the Dockerfile `ENTRYPOINT` is used so that there is no shell wrapping the java process. The advantage is that the java process will respond to `KILL` signals sent to the container. In practice that means, for instance, that if you `docker run` your image locally, you can stop it with `CTRL-C`. If the command line gets a bit long you can extract it out into a shell script and `COPY` it into the image before you run it. Example:
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+COPY run.sh .
+COPY target/*.jar app.jar
+ENTRYPOINT ["run.sh"]
+----
+
+Remember to use `exec java ...` to launch the java process (so it can handle the `KILL` signals):
+
+`run.sh`
+[source]
+----
+#!/bin/sh
+exec java -jar /app.jar
+----
+
+Another interesting aspect of the entry point is whether or not you can inject environment variables into the java process at runtime. For example, suppose you want to have the option to add java command lline options at runtime. You might try to do this:
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ARG JAR_FILE
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["java","${JAVA_OPTS}","-jar","/app.jar"]
+----
+
+and
+
+```
+$ docker build -t myorg/myapp .
+$ docker run -p 9000:9000 -e JAVA_OPTS=-Dserver.port=9000 myorg/myapp
+```
+
+This will fail because the `${}` substitution requires a shell; the exec form doesn't use a shell to launch the process, so the options will not be applied. You can get round that by moving the entry point to a script (like the `run.sh` example above), or by explicitly creating a shell in the entry point. For example:
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ARG JAR_FILE
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app.jar"]
+----
+
+You can then launch this app with
+
+```
+$ docker run -p 8080:8080 -e "JAVA_OPTS=-Ddebug -Xmx128m" myorg/myapp
+...
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.2.0.RELEASE)
+...
+2019-10-29 09:12:12.169 DEBUG 1 --- [           main] ConditionEvaluationReportLoggingListener : 
+
+
+============================
+CONDITIONS EVALUATION REPORT
+============================
+...
+
+```
+
+(Showing parts of the full `DEBUG` output that is generated with `-Ddebug` by Spring Boot.)
+
+Using an `ENTRYPOINT` with an explicit shell like the above means that you can pass environment variables into the java command, but so far you cannot also provide command line arguments to the Spring Boot application. This trick doesn't work to run the app on port 9000:
+
+```
+$ docker run -p 9000:9000 myorg/myapp --server.port=9000
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.2.0.RELEASE)
+...
+2019-10-29 09:20:19.718  INFO 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 8080
+```
+
+The reason it didn't work is because the docker command (the `--server.port=9000` part) is passed to the entry point (`sh`), not to the java process which it launches. To fix that you need to add the command line from the `CMD` to the `ENTRYPOINT`:
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ARG JAR_FILE
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app.jar ${0} ${@}"]
+----
+
+```
+$ docker run -p 9000:9000 myorg/myapp --server.port=9000
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.2.0.RELEASE)
+...
+2019-10-29 09:30:19.751  INFO 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 9000
+```
+
+Note the use of `${0}` for the "command" (in this case the first program argument) and `${@}` for the "command arguments" (the rest of the program arguments). If you use a script for the entry point, then you don't need the `${0}` (that would be `/app/run.sh` in the example above). Example:
+
+`run.sh`
+[source]
+----
+#!/bin/sh
+exec java ${JAVA_OPTS} -jar /app.jar ${@}
+----
+
 The docker configuration is very simple so far, and the generated image is not very efficient. The docker image has a single filesystem layer with the fat jar in it, and every change we make to the application code changes that layer, which might be 10MB or more (even as much as 50MB for some apps). We can improve on that by splitting the JAR up into multiple layers.
 
 === Smaller Images
