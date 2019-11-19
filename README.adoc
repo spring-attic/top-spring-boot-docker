@@ -31,13 +31,13 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 The `JAR_FILE` could be passed in as part of the `docker` command (it will be different for Maven and Gradle). E.g. for Maven:
 
 ```
-$ docker build --build-arg=target/*.jar -t myorg/myapp .
+$ docker build --build-arg JAR_FILE=target/*.jar -t myorg/myapp .
 ```
 
 and for Gradle:
 
 ```
-$ docker build --build-arg=build/libs/*.jar -t myorg/myapp .
+$ docker build --build-arg JAR_FILE=build/libs/*.jar -t myorg/myapp .
 ```
 
 Of course, once you have chosen a build system, you don't need the `ARG` - you can just hard code the jar location. E.g. for Maven:
@@ -127,7 +127,7 @@ Another interesting aspect of the entry point is whether or not you can inject e
 ----
 FROM openjdk:8-jdk-alpine
 VOLUME /tmp
-ARG JAR_FILE
+ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
 ENTRYPOINT ["java","${JAVA_OPTS}","-jar","/app.jar"]
 ----
@@ -146,7 +146,7 @@ This will fail because the `${}` substitution requires a shell; the exec form do
 ----
 FROM openjdk:8-jdk-alpine
 VOLUME /tmp
-ARG JAR_FILE
+ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
 ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app.jar"]
 ----
@@ -198,7 +198,7 @@ The reason it didn't work is because the docker command (the `--server.port=9000
 ----
 FROM openjdk:8-jdk-alpine
 VOLUME /tmp
-ARG JAR_FILE
+ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
 ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app.jar ${0} ${@}"]
 ----
