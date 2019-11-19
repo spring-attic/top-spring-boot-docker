@@ -364,6 +364,28 @@ $ DOCKER_BUILDKIT=1 docker build -t myorg/myapp .
 
 With the experimental features you get a different output on the console, but you can see that a Maven build now only takes a few seconds instead of minutes, once the cache is warm.
 
+The Gradle version of this `Dockerfile` configuration is very similar:
+
+`Dockerfile`
+[source]
+----
+# syntax=docker/dockerfile:experimental
+FROM openjdk:8-jdk-alpine AS build
+WORKDIR /workspace/app
+
+COPY . /workspace/app
+RUN --mount=type=cache,target=/root/.gradle ./gradlew clean build
+RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
+
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ARG DEPENDENCY=/workspace/app/build/dependency
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+ENTRYPOINT ["java","-cp","app:app/lib/*","hello.Application"]
+----
+
 NOTE: While these features are in the experimental phase, the options for switching buildkit on and off depend on the version of `docker` that you are using. Check the documentation for the version you have (the example above is correct for `docker` 18.0.6).
 
 == Security Aspects
