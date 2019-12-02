@@ -31,13 +31,17 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 The `JAR_FILE` could be passed in as part of the `docker` command (it will be different for Maven and Gradle). E.g. for Maven:
 
 ```
+
 $ docker build --build-arg=target/*.jar -t myorg/myapp .
+
 ```
 
 and for Gradle:
 
 ```
+
 $ docker build --build-arg=build/libs/*.jar -t myorg/myapp .
+
 ```
 
 Of course, once you have chosen a build system, you don't need the `ARG` - you can just hard code the jar location. E.g. for Maven:
@@ -84,6 +88,146 @@ app.jar  dev      home     media    proc     run      srv      tmp      var
 bin      etc      lib      mnt      root     sbin     sys      usr
 / #
 ```
+
+NOTE: The alpine base container we used in the example does not have `bash`, so this is an `ash` shell. It has some of the features of `bash` but not all.
+
+If you have a running container and you want to peek into it, use `docker exec` you can do this:
+
+```
+$ docker run --name myapp -ti --entrypoint /bin/sh myorg/myapp
+$ docker exec -ti myapp /bin/sh
+/ #
+```
+
+where `myapp` is the `--name` passed to the `docker run` command. If you didn't use `--name` then docker assigns a mnemonic name which you can scrape from the output of `docker ps`. You could also use the sha identifier of the container instead of the name, also visible from `docker ps`.
+
+=== The Entry Point
+
+The https://docs.docker.com/engine/reference/builder/#exec-form-entrypoint-example[exec form] of the Dockerfile `ENTRYPOINT` is used so that there is no shell wrapping the java process. The advantage is that the java process will respond to `KILL` signals sent to the container. In practice that means, for instance, that if you `docker run` your image locally, you can stop it with `CTRL-C`. If the command line gets a bit long you can extract it out into a shell script and `COPY` it into the image before you run it. Example:
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+COPY run.sh .
+COPY target/*.jar app.jar
+ENTRYPOINT ["run.sh"]
+----
+
+Remember to use `exec java ...` to launch the java process (so it can handle the `KILL` signals):
+
+`run.sh`
+[source]
+----
+#!/bin/sh
+exec java -jar /app.jar
+----
+
+Another interesting aspect of the entry point is whether or not you can inject environment variables into the java process at runtime. For example, suppose you want to have the option to add java command lline options at runtime. You might try to do this:
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["java","${JAVA_OPTS}","-jar","/app.jar"]
+----
+
+and
+
+```
+$ docker build -t myorg/myapp .
+$ docker run -p 9000:9000 -e JAVA_OPTS=-Dserver.port=9000 myorg/myapp
+```
+
+This will fail because the `${}` substitution requires a shell; the exec form doesn't use a shell to launch the process, so the options will not be applied. You can get round that by moving the entry point to a script (like the `run.sh` example above), or by explicitly creating a shell in the entry point. For example:
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app.jar"]
+----
+
+You can then launch this app with
+
+```
+$ docker run -p 8080:8080 -e "JAVA_OPTS=-Ddebug -Xmx128m" myorg/myapp
+...
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.2.0.RELEASE)
+...
+2019-10-29 09:12:12.169 DEBUG 1 --- [           main] ConditionEvaluationReportLoggingListener : 
+
+
+============================
+CONDITIONS EVALUATION REPORT
+============================
+...
+
+```
+
+(Showing parts of the full `DEBUG` output that is generated with `-Ddebug` by Spring Boot.)
+
+Using an `ENTRYPOINT` with an explicit shell like the above means that you can pass environment variables into the java command, but so far you cannot also provide command line arguments to the Spring Boot application. This trick doesn't work to run the app on port 9000:
+
+```
+$ docker run -p 9000:9000 myorg/myapp --server.port=9000
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.2.0.RELEASE)
+...
+2019-10-29 09:20:19.718  INFO 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 8080
+```
+
+The reason it didn't work is because the docker command (the `--server.port=9000` part) is passed to the entry point (`sh`), not to the java process which it launches. To fix that you need to add the command line from the `CMD` to the `ENTRYPOINT`:
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app.jar ${0} ${@}"]
+----
+
+```
+$ docker run -p 9000:9000 myorg/myapp --server.port=9000
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.2.0.RELEASE)
+...
+2019-10-29 09:30:19.751  INFO 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 9000
+```
+
+Note the use of `${0}` for the "command" (in this case the first program argument) and `${@}` for the "command arguments" (the rest of the program arguments). If you use a script for the entry point, then you don't need the `${0}` (that would be `/app/run.sh` in the example above). Example:
+
+`run.sh`
+[source]
+----
+#!/bin/sh
+exec java ${JAVA_OPTS} -jar /app.jar ${@}
+----
 
 The docker configuration is very simple so far, and the generated image is not very efficient. The docker image has a single filesystem layer with the fat jar in it, and every change we make to the application code changes that layer, which might be 10MB or more (even as much as 50MB for some apps). We can improve on that by splitting the JAR up into multiple layers.
 
@@ -224,7 +368,52 @@ $ DOCKER_BUILDKIT=1 docker build -t myorg/myapp .
 
 With the experimental features you get a different output on the console, but you can see that a Maven build now only takes a few seconds instead of minutes, once the cache is warm.
 
+The Gradle version of this `Dockerfile` configuration is very similar:
+
+`Dockerfile`
+[source]
+----
+# syntax=docker/dockerfile:experimental
+FROM openjdk:8-jdk-alpine AS build
+WORKDIR /workspace/app
+
+COPY . /workspace/app
+RUN --mount=type=cache,target=/root/.gradle ./gradlew clean build
+RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
+
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ARG DEPENDENCY=/workspace/app/build/dependency
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+ENTRYPOINT ["java","-cp","app:app/lib/*","hello.Application"]
+----
+
 NOTE: While these features are in the experimental phase, the options for switching buildkit on and off depend on the version of `docker` that you are using. Check the documentation for the version you have (the example above is correct for `docker` 18.0.6).
+
+== Security Aspects
+
+Just as in classic VM-deployments, processes should not be run with root permissions. Instead the image should contain a non-root user that runs the app.
+
+In a `Dockerfile`, this can be achieved by adding another layer that adds a (system) user and group, then set it as the current user (instead of the default, root):
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jdk-alpine
+
+RUN addgroup -S demo && adduser -S demo -G demo
+USER demo
+
+...
+----
+
+In case someone manages to break out of your app and run system commands inside the container, this will limit their capabilities (principle of least privilege).
+
+NOTE: Some of the further `Dockerfile` commands only work as root, so maybe you have to move the USER command further down (e.g. if you plan to install more packages into the container, which only works as root).
+
+NOTE: Other approaches, not using a `Dockerfile`, might be more amenable. For instance, in the buildpack approach described later, most implementations will use a non-root user by default.
 
 == Build Plugins
 
@@ -336,7 +525,7 @@ Example with Maven (without changing the `pom.xml`):
 $ mvn com.google.cloud.tools:jib-maven-plugin:build -Dimage=myorg/myapp
 ```
 
-To run the above command you will need to have permission to push to Dockerhub under the `myorg` repository prefix. If you have authenticated with `docker` on the command line, that will work from your local `~/.docker` configuration. You can also set up a Maven "server" authentication in your `~/.m2/settings.xml` (the `id` of the repository ios significant):
+To run the above command you will need to have permission to push to Dockerhub under the `myorg` repository prefix. If you have authenticated with `docker` on the command line, that will work from your local `~/.docker` configuration. You can also set up a Maven "server" authentication in your `~/.m2/settings.xml` (the `id` of the repository is significant):
 
 `settings.xml`
 [source]
@@ -357,7 +546,7 @@ The gradle plugin has similar features, once you have it in your `build.gradle`,
 ----
 plugins {
   ...
-  id 'com.google.cloud.tools.jib' version '0.9.11'
+  id 'com.google.cloud.tools.jib' version '1.8.0'
 }
 ----
 
@@ -374,8 +563,8 @@ buildscript {
       mavenCentral()
     }
     dependencies {
-        classpath('org.springframework.boot:spring-boot-gradle-plugin:2.0.5.RELEASE')
-        classpath('com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:0.9.11')
+        classpath('org.springframework.boot:spring-boot-gradle-plugin:2.2.1.RELEASE')
+        classpath('com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:1.8.0')
     }
 }
 ----
@@ -453,8 +642,8 @@ The output from a buildpack lifecycle is a container image, but you don't need d
 To give you an idea of the features of a buildpack here is an example using the https://github.com/buildpack/pack[Pack CLI] from the command line (it would work with the sample app we have been using in thus guide, no need for a `Dockerfile` or any special build configuration):
 
 ```
-$ pack build myorg/myapp --builder=nebhale/java-build --path=.
-2018/11/07 09:54:48 Pulling builder image 'nebhale/java-build' (use --no-pull flag to skip this step)
+$ pack build myorg/myapp --builder=cloudfoundry/cnb:bionic --path=.
+2018/11/07 09:54:48 Pulling builder image 'cloudfoundry/cnb:bionic' (use --no-pull flag to skip this step)
 2018/11/07 09:54:49 Selected run image 'packs/run' from stack 'io.buildpacks.stacks.bionic'
 2018/11/07 09:54:49 Pulling run image 'packs/run' (use --no-pull flag to skip this step)
 *** DETECTING:
@@ -489,11 +678,13 @@ $ docker run -p 8080:8080 myorg/myapp
 ...
 ```
 
-The `--builder` is a docker image that runs the buildpack lifecycle - typically it would be a shared resource for all developers, or all developers on a single platform. This one is work in progress from Ben Hale, who maintains the older buildpacks for Cloud Foundry and is now working on the new generation. The output in this case went to the local docker daemon, but in an automation platform it could be a docker registry. Once the `pack` CLI reaches a stable release the default builder will probably do the same thing.
+The `--builder` is a docker image that runs the buildpack lifecycle - typically it would be a shared resource for all developers, or all developers on a single platform. You can set the default builder on the command line (creates a file in `~/.pack`) and then omit that flag from subsequesnt builds.
+
+NOTE: The `cloudfoundry/cnb:bionic` builder also knows how to build an image from an executable jar file, so you can build using `mvnw` first and then point the `--path` to the jar file for the same result.
 
 == Knative
 
-Another new project in the container and platform space is https://cloud.google.com/knative/[Knative]. Knative is a lot of things, but if you are not familiar with it you can think of it as a building block for building a serverless platform. It is built on https://kubernetes.io[Kubernetes] so ultimately it consumes container images, and turns them into applications or "services" on the platform. One of the main features it has, though, is the ability to consume source code and build the container for you, making it more developer and operator friendly. https://github.com/knative/build[Knative Build] is the component that does this and is itself a flexible platform for transforming user code into containers - you can do it in pretty much any way you like. Some templates are provided with common patterns like Maven and Gradle builds, and multi-stage docker builds using https://github.com/GoogleContainerTools/kaniko[Kaniko]. There is also a template that use https://github.com/knative/build-templates/tree/master/buildpack[Buildpacks] which is very interesting for us, since buildpacks have always had good support for Spring Boot. Buildpacks on Knative are also the opinionated choice of https://projectriff.io[Riff] and https://pivotal.io/platform/pivotal-function-service[Pivotal Function Service] for transforming user functions into running serverless apps.
+Another new project in the container and platform space is https://cloud.google.com/knative/[Knative]. Knative is a lot of things, but if you are not familiar with it you can think of it as a building block for building a serverless platform. It is built on https://kubernetes.io[Kubernetes] so ultimately it consumes container images, and turns them into applications or "services" on the platform. One of the main features it has, though, is the ability to consume source code and build the container for you, making it more developer and operator friendly. https://github.com/knative/build[Knative Build] is the component that does this and is itself a flexible platform for transforming user code into containers - you can do it in pretty much any way you like. Some templates are provided with common patterns like Maven and Gradle builds, and multi-stage docker builds using https://github.com/GoogleContainerTools/kaniko[Kaniko]. There is also a template that use https://github.com/knative/build-templates/tree/master/buildpack[Buildpacks] which is very interesting for us, since buildpacks have always had good support for Spring Boot. Buildpacks on Knative are also a choice that users can make with https://projectriff.io[Riff] and https://pivotal.io/platform/pivotal-function-service[Pivotal Function Service] for transforming user functions into running serverless apps.
 
 == Closing
 
