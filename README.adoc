@@ -411,6 +411,18 @@ NOTE: Some of the further `Dockerfile` commands only work as root, so maybe you 
 
 NOTE: Other approaches, not using a `Dockerfile`, might be more amenable. For instance, in the buildpack approach described later, most implementations will use a non-root user by default.
 
+Another consideration is that the full JDK is probably not needed by most apps at runtime, so we can safely switch to the JRE base image, once we have a multi-stage build. So in the multi-stage build above we can use 
+
+`Dockerfile`
+[source]
+----
+FROM openjdk:8-jre-alpine
+
+...
+----
+
+for the final, runnable image. Ad mentioned above already, this will also save a bit of space in the image, taken up by tools that are not needed at runtime.
+
 == Build Plugins
 
 If you don't want to call `docker` directly in your build, there is quite a rich set of plugins for Maven and Gradle that can do that work for you. Here are just a few.
