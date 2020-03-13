@@ -427,6 +427,57 @@ for the final, runnable image. Ad mentioned above already, this will also save a
 
 If you don't want to call `docker` directly in your build, there is quite a rich set of plugins for Maven and Gradle that can do that work for you. Here are just a few.
 
+=== Spring Boot Plugins
+
+With Spring Boot 2.3 you have the option of building an image from Maven or Gradle directly with Spring Boot. As long as you are already building a Spring Boot jar file, you only need to call the plugin directly. With https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/maven-plugin/html/#build-image[Maven]:
+
+```
+$ ./mvnw spring-boot:build-image
+```
+
+and with https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/gradle-plugin/reference/html/#build-image[Gradle]
+
+```
+$ ./gradlew bootBuildImage
+```
+
+It uses the local docker daemon (which therefore must be installed) but doesn't require a `Dockerfile`. The result is an image called `docker.io/<group>/<artifact>:latest` by default. You can modify the image name in Maven using
+
+```xml
+<project>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<image>
+						<name>myorg.demo</name>
+					</image>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
+```
+
+and in Gradle using
+
+```groovy
+bootBuildImage {
+	builder = "myorg/demo"
+}
+```
+
+The image is built using https://buildpacks.io/[Cloud Native Buildpacks], where the default builder is optimized for a Spring Boot application (you can customize it but the defaults are useful). The image is layered efficiently, like in the examples above. It also uses the CF memory calculator to size the JVM at runtime based on the container resources available, so when you run the image you will see the memory calculator reporting its results:
+
+```
+$ docker run -p 8080:8080 myorg/demo
+Container memory limit unset. Configuring JVM for 1G container.
+Calculated JVM Memory Configuration: -XX:MaxDirectMemorySize=10M -XX:MaxMetaspaceSize=86557K -XX:ReservedCodeCacheSize=240M -Xss1M -Xmx450018K (Head Room: 0%, Loaded Class Count: 12868, Thread Count: 250, Total Memory: 1073741824)
+...
+```
+
 === Spotify Maven Plugin
 
 The https://github.com/spotify/dockerfile-maven[Spotify Maven Plugin] is a popular choice. It requires the application developer to write a `Dockerfile` and then runs `docker` for you, just as if you were doing it on the command line. There are some configuration options for the docker image tag and other stuff, but it keeps the docker knowledge in your application concentrated in a `Dockerfile`, which many people like.
