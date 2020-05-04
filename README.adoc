@@ -465,7 +465,7 @@ and in Gradle using
 
 ```groovy
 bootBuildImage {
-	builder = "myorg/demo"
+	imageName = "myorg/demo"
 }
 ```
 
