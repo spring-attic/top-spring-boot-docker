@@ -572,6 +572,37 @@ docker {
 
 In this example we have chosen to unpack the Spring Boot fat jar in a specific location in the `build` directory, which is the root for the docker build. Then the multi-layer (not multi-stage) `Dockerfile` from above will work.
 
+=== Spring Boot Maven and Gradle Plugins
+
+Spring Boot build plugins for https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/maven-plugin/reference/html/#build-image[Maven] and https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/gradle-plugin/reference/html/#build-image[Gradle] can be used to create container images. The plugins create an OCI image (the same format as one created by `docker build`) using https://buildpacks.io/[Cloud Native Buildpacks].  You don't need a `Dockerfile` but you do need a docker daemon, either locally (which is what you use when you build with docker) or remotely via ` DOCKER_HOST` environment variable.
+
+Example with Maven (without changing the `pom.xml`):
+
+```
+$ ./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=myorg/myapp
+```
+
+and with Gradle:
+
+```
+$ ./gradlew bootBuildImage --imageName=myorg/myapp
+```
+
+The first build might take a long time because it has to download some container images, and the JDK, but subsequent builds will be fast.
+
+If you run the image:
+
+```
+$ docker run -p 8080:8080 -t myorg/myapp
+Container memory limit unset. Configuring JVM for 1G container.
+Calculated JVM Memory Configuration: -XX:MaxDirectMemorySize=10M -XX:MaxMetaspaceSize=86381K -XX:ReservedCodeCacheSize=240M -Xss1M -Xmx450194K (Head Room: 0%, Loaded Class Count: 12837, Thread Count: 250, Total Memory: 1073741824)
+....
+2015-03-31 13:25:48.035  INFO 1 --- [           main] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat started on port(s): 8080 (http)
+2015-03-31 13:25:48.037  INFO 1 --- [           main] hello.Application   
+```
+
+you will see it start up as normal. You might also notice that the JVM memory requirements were computed and set as command line options inside the container. This is the same memory calculation that has been in use in Cloud Foundry build packs for many years. It represents significant research into the best choices for a range of JVM applications, including but not limited to Spring Boot applications, and the results are usually much better than the default setting from the JVM. You can customize the command line options and override the memory calculator using environment variables.
+
 === Jib Maven and Gradle Plugins
 
 Google has an open source tool called https://github.com/GoogleContainerTools/jib[Jib] that is relatively new, but quite interesting for a number of reasons. Probably the most interesting thing is that you don't need docker to run it - it builds the image using the same standard output as you get from `docker build` but doesn't use `docker` unless you ask it to - so it works in environments where docker is not installed (not uncommon in build servers). You also don't need a `Dockerfile` (it would be ignored anyway), or anything in your `pom.xml` to get an image built in Maven (Gradle would require you to at least install the plugin in `build.gradle`).
@@ -733,19 +764,19 @@ $ docker run -p 8080:8080 myorg/myapp
  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
   '  |____| .__|_| |_|_| |_\__, | / / / /
  =========|_|==============|___/=/_/_/_/
- :: Spring Boot ::        (v2.0.5.RELEASE)
+ :: Spring Boot ::        (v2.3.0.RELEASE)
 
 2018-11-07 09:41:06.390  INFO 1 --- [main] hello.Application: Starting Application on 1989fb9a00a4 with PID 1 (/workspace/app/BOOT-INF/classes started by pack in /workspace/app)
 ...
 ```
 
-The `--builder` is a docker image that runs the buildpack lifecycle - typically it would be a shared resource for all developers, or all developers on a single platform. You can set the default builder on the command line (creates a file in `~/.pack`) and then omit that flag from subsequesnt builds.
+The `--builder` is a docker image that runs the buildpack lifecycle - typically it would be a shared resource for all developers, or all developers on a single platform. You can set the default builder on the command line (creates a file in `~/.pack`) and then omit that flag from subsequent builds.
 
 NOTE: The `cloudfoundry/cnb:bionic` builder also knows how to build an image from an executable jar file, so you can build using `mvnw` first and then point the `--path` to the jar file for the same result.
 
 == Knative
 
-Another new project in the container and platform space is https://cloud.google.com/knative/[Knative]. Knative is a lot of things, but if you are not familiar with it you can think of it as a building block for building a serverless platform. It is built on https://kubernetes.io[Kubernetes] so ultimately it consumes container images, and turns them into applications or "services" on the platform. One of the main features it has, though, is the ability to consume source code and build the container for you, making it more developer and operator friendly. https://github.com/knative/build[Knative Build] is the component that does this and is itself a flexible platform for transforming user code into containers - you can do it in pretty much any way you like. Some templates are provided with common patterns like Maven and Gradle builds, and multi-stage docker builds using https://github.com/GoogleContainerTools/kaniko[Kaniko]. There is also a template that use https://github.com/knative/build-templates/tree/master/buildpack[Buildpacks] which is very interesting for us, since buildpacks have always had good support for Spring Boot. Buildpacks on Knative are also a choice that users can make with https://projectriff.io[Riff] and https://pivotal.io/platform/pivotal-function-service[Pivotal Function Service] for transforming user functions into running serverless apps.
+Another new project in the container and platform space is https://cloud.google.com/knative/[Knative]. Knative is a lot of things, but if you are not familiar with it you can think of it as a building block for building a serverless platform. It is built on https://kubernetes.io[Kubernetes] so ultimately it consumes container images, and turns them into applications or "services" on the platform. One of the main features it has, though, is the ability to consume source code and build the container for you, making it more developer and operator friendly. https://github.com/knative/build[Knative Build] is the component that does this and is itself a flexible platform for transforming user code into containers - you can do it in pretty much any way you like. Some templates are provided with common patterns like Maven and Gradle builds, and multi-stage docker builds using https://github.com/GoogleContainerTools/kaniko[Kaniko]. There is also a template that use https://github.com/knative/build-templates/tree/master/buildpack[Buildpacks] which is very interesting for us, since buildpacks have always had good support for Spring Boot.
 
 == Closing
 
