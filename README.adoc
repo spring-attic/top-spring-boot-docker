@@ -429,13 +429,13 @@ If you don't want to call `docker` directly in your build, there is quite a rich
 
 === Spring Boot Plugins
 
-With Spring Boot 2.3 you have the option of building an image from Maven or Gradle directly with Spring Boot. As long as you are already building a Spring Boot jar file, you only need to call the plugin directly. With https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/maven-plugin/html/#build-image[Maven]:
+With Spring Boot 2.3 you have the option of building an image from Maven or Gradle directly with Spring Boot. As long as you are already building a Spring Boot jar file, you only need to call the plugin directly. With https://docs.spring.io/spring-boot/docs/current/maven-plugin/reference/html/#build-image[Maven]:
 
 ```
 $ ./mvnw spring-boot:build-image
 ```
 
-and with https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/gradle-plugin/reference/html/#build-image[Gradle]
+and with https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/html/#build-image[Gradle]
 
 ```
 $ ./gradlew bootBuildImage
