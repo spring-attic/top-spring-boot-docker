@@ -95,7 +95,7 @@ $ docker exec -ti myapp /bin/sh
 / #
 ```
 
-where `myapp` is the `--name` passed to the `docker run` command. If you didn't use `--name` then docker assigns a mnemonic name which you can scrape from the output of `docker ps`. You could also use the sha identifier of the container instead of the name, also visible from `docker ps`.
+where `myapp` is the `--name` passed to the `docker run` command. If you didn't use `--name` then docker assigns a mnemonic name which you can scrape from the output of `docker ps`. You could also use the SHA identifier of the container instead of the name, also visible from `docker ps`.
 
 === The Entry Point
 
@@ -120,7 +120,7 @@ Remember to use `exec java ...` to launch the java process (so it can handle the
 exec java -jar /app.jar
 ----
 
-Another interesting aspect of the entry point is whether or not you can inject environment variables into the java process at runtime. For example, suppose you want to have the option to add java command lline options at runtime. You might try to do this:
+Another interesting aspect of the entry point is whether or not you can inject environment variables into the java process at runtime. For example, suppose you want to have the option to add java command line options at runtime. You might try to do this:
 
 `Dockerfile`
 [source]
@@ -421,7 +421,7 @@ FROM openjdk:8-jre-alpine
 ...
 ----
 
-for the final, runnable image. Ad mentioned above already, this will also save a bit of space in the image, taken up by tools that are not needed at runtime.
+for the final, runnable image. As already mentioned above, this also saves some space in the image which would be occupied by tools that are not needed at runtime.
 
 == Build Plugins
 
@@ -780,7 +780,7 @@ Another new project in the container and platform space is https://cloud.google.
 
 == Closing
 
-This guide has presented a lot of options for building container images for Spring Boot applications. All of them are completely valid choices, and it is now up to you to decide which one you need. Your first question should be "do I really need to build a container image?" If the answer is "yes" then your choices will likely be driven by efficiency and cacheability, and by separation of concerns. Do you want to insulate developers from needing to know too much about how container images are created? Do you want to make developers responsible for updating images when operating system and middleware vulnerabilities neeed to be patched? Or maybe developers need complete control over the whole process and they have all the tools and knowledge they need.
+This guide has presented a lot of options for building container images for Spring Boot applications. All of them are completely valid choices, and it is now up to you to decide which one you need. Your first question should be "do I really need to build a container image?" If the answer is "yes" then your choices will likely be driven by efficiency and cacheability, and by separation of concerns. Do you want to insulate developers from needing to know too much about how container images are created? Do you want to make developers responsible for updating images when operating system and middleware vulnerabilities need to be patched? Or maybe developers need complete control over the whole process and they have all the tools and knowledge they need.
 
 // https://dzone.com/guides/deploying-spring-boot-on-docker
 // https://dzone.com/guides/creating-dual-layer-docker-images-for-spring-boot
