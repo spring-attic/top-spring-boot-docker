@@ -574,7 +574,7 @@ In this example we have chosen to unpack the Spring Boot fat jar in a specific l
 
 === Spring Boot Maven and Gradle Plugins
 
-Spring Boot build plugins for https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/maven-plugin/reference/html/#build-image[Maven] and https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/gradle-plugin/reference/html/#build-image[Gradle] can be used to create container images. The plugins create an OCI image (the same format as one created by `docker build`) using https://buildpacks.io/[Cloud Native Buildpacks].  You don't need a `Dockerfile` but you do need a docker daemon, either locally (which is what you use when you build with docker) or remotely via ` DOCKER_HOST` environment variable.
+Spring Boot build plugins for https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/maven-plugin/reference/html/#build-image[Maven] and https://docs.spring.io/spring-boot/docs/2.3.0.RELEASE/gradle-plugin/reference/html/#build-image[Gradle] can be used to create container images. The plugins create an OCI image (the same format as one created by `docker build`) using https://buildpacks.io/[Cloud Native Buildpacks].  You don't need a `Dockerfile` but you do need a docker daemon, either locally (which is what you use when you build with docker) or remotely via `DOCKER_HOST` environment variable.
 
 Example with Maven (without changing the `pom.xml`):
 
