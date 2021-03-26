@@ -40,7 +40,7 @@ and for Gradle:
 $ docker build --build-arg JAR_FILE=build/libs/*.jar -t myorg/myapp .
 ```
 
-Of course, once you have chosen a build system, you don't need the `ARG` - you can just hard code the jar location. E.g. for Maven:
+Of course, once you have chosen a build system, you don't need the `ARG` -- you can just hard code the jar location. E.g. for Maven:
 
 `Dockerfile`
 [source]
@@ -216,7 +216,7 @@ $ docker run -p 9000:9000 myorg/myapp --server.port=9000
 2019-10-29 09:30:19.751  INFO 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 9000
 ```
 
-Note the use of `${0}` for the "command" (in this case the first program argument) and `${@}` for the "command arguments" (the rest of the program arguments). If you use a script for the entry point, then you don't need the `${0}` (that would be `/app/run.sh` in the example above). Example:
+Note the use of `${0}` for the ``command'' (in this case the first program argument) and `${@}` for the ``command arguments'' (the rest of the program arguments). If you use a script for the entry point, then you don't need the `${0}` (that would be `/app/run.sh` in the example above). Example:
 
 `run.sh`
 [source]
@@ -229,7 +229,7 @@ The docker configuration is very simple so far, and the generated image is not v
 
 === Smaller Images
 
-Notice that the base image in the example above is `openjdk:8-jdk-alpine`. The `alpine` images are smaller than the standard `openjdk` library images from https://hub.docker.com/_/openjdk/[Dockerhub]. There is no official alpine image for Java 11 yet (AdoptOpenJDK had one for a while but it no longer appears on their https://hub.docker.com/r/adoptopenjdk/openjdk11/[Dockerhub page]). You can also save about 20MB in the base image by using the "jre" label instead of "jdk". Not all apps work with a JRE (as opposed to a JDK), but most do, and indeed some organizations enforce a rule that every app has to because of the risk of misuse of some of the JDK features (like compilation).
+Notice that the base image in the example above is `openjdk:8-jdk-alpine`. The `alpine` images are smaller than the standard `openjdk` library images from https://hub.docker.com/_/openjdk/[Dockerhub]. There is no official alpine image for Java 11 yet (AdoptOpenJDK had one for a while but it no longer appears on their https://hub.docker.com/r/adoptopenjdk/openjdk11/[Dockerhub page]). You can also save about 20MB in the base image by using the ``jre'' label instead of ``jdk''. Not all apps work with a JRE (as opposed to a JDK), but most do, and indeed some organizations enforce a rule that every app has to because of the risk of misuse of some of the JDK features (like compilation).
 
 Another trick that could get you a smaller image is to use https://openjdk.java.net/projects/jigsaw/quick-start#linker[JLink], which is bundled with OpenJDK 11. JLink allows you to build a custom JRE distribution from a subset of modules in the full JDK, so you don't need a JRE or JDK in the base image. In principle this would get you a smaller total image size than using the `openjdk` official docker images. In practice, you won't (yet) be able to use the `alpine` base image with JDK 11, so your choice of base image will be limited and will probably result in a larger final image size. Also, a custom JRE in your own base image cannot be shared amongst other applications, since they would need different customizations. So you might have smaller images for all your applications, but they still take longer to start because they don't benefit from caching the JRE layer.
 
@@ -237,7 +237,7 @@ That last point highlights a really important concern for image builders: the go
 
 == A Better Dockerfile
 
-A Spring Boot fat jar naturally has "layers" because of the way that the jar itself is packaged. If we unpack it first it will already be divided into external and internal dependencies. To do this in one step in the docker build, we need to unpack the jar first. For example (sticking with Maven, but the Gradle version is pretty similar):
+A Spring Boot fat jar naturally has ``layers'' because of the way that the jar itself is packaged. If we unpack it first it will already be divided into external and internal dependencies. To do this in one step in the docker build, we need to unpack the jar first. For example (sticking with Maven, but the Gradle version is pretty similar):
 
 ```
 $ mkdir target/dependency
@@ -273,7 +273,7 @@ If you want to start your app as quickly as possible (most people do) there are 
 * Fix the location of the
 https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-external-config-application-property-files[Spring Boot config file(s)]
 with `spring.config.location` (command line argument or System property etc.).
-* Switch off JMX - you probably don't need it in a container - with `spring.jmx.enabled=false`
+* Switch off JMX -- you probably don't need it in a container -- with `spring.jmx.enabled=false`
 * Run the JVM with `-noverify`. Also consider `-XX:TieredStopAtLevel=1`
 (that will slow down the JIT later at the expense of the saved startup time).
 * Use the container memory hints for Java 8: `-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap`. With Java 11 this is automatic by default.
@@ -307,7 +307,7 @@ COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 ENTRYPOINT ["java","-cp","app:app/lib/*","hello.Application"]
 ----
 
-The first image is labelled "build" and it is used to run Maven and build the fat jar, then unpack it. The unpacking could also be done by Maven or Gradle (this is the approach taken in the Getting Started Guide) - there really isn't much difference, except that the build configuration would have to be edited and a plugin added.
+The first image is labelled ``build'' and it is used to run Maven and build the fat jar, then unpack it. The unpacking could also be done by Maven or Gradle (this is the approach taken in the Getting Started Guide) - there really isn't much difference, except that the build configuration would have to be edited and a plugin added.
 
 Notice that the source code has been split into 4 layers. The later layers contain the build configuration and the source code for the app, and the earlier layers contain the build system itself (the Maven wrapper). This is a small optimization, and it also means that we don't have to copy the `target` directory to a docker image, even a temporary one used for the build.
 
@@ -315,7 +315,7 @@ Every build where the source code changes will be slow because the Maven cache h
 
 === Experimental Features
 
-Docker 18.06 comes with some https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/experimental.md["experimental" features] that includes a way to cache build dependencies. To switch them on you need a flag in the daemon (`dockerd`) and also an environment variable when you run the client, and then you can add a magic first line to your `Dockerfile`:
+Docker 18.06 comes with some https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/experimental.md[``experimental'' features] that includes a way to cache build dependencies. To switch them on you need a flag in the daemon (`dockerd`) and also an environment variable when you run the client, and then you can add a magic first line to your `Dockerfile`:
 
 `Dockerfile`
 [source]
@@ -615,7 +615,7 @@ Example with Maven (without changing the `pom.xml`):
 $ mvn com.google.cloud.tools:jib-maven-plugin:build -Dimage=myorg/myapp
 ```
 
-To run the above command you will need to have permission to push to Dockerhub under the `myorg` repository prefix. If you have authenticated with `docker` on the command line, that will work from your local `~/.docker` configuration. You can also set up a Maven "server" authentication in your `~/.m2/settings.xml` (the `id` of the repository is significant):
+To run the above command you will need to have permission to push to Dockerhub under the `myorg` repository prefix. If you have authenticated with `docker` on the command line, that will work from your local `~/.docker` configuration. You can also set up a Maven ``server'' authentication in your `~/.m2/settings.xml` (the `id` of the repository is significant):
 
 `settings.xml`
 [source]
@@ -671,7 +671,7 @@ As with the Maven build, if you have authenticated with `docker` on the command 
 
 Automation is part of every application lifecycle these days (or should be). The tools that people use to do the automation tend to be quite good at just invoking the build system from the source code. So if that gets you a docker image, and the environment in the build agents is sufficiently aligned with developer's own environment, that might be good enough. Authenticating to the docker registry is likely to be the biggest challenge, but there are features in all the automation tools to help with that.
 
-However, sometimes it is better to leave container creation completely to an automation layer, in which case the user's code might not need to be polluted. Container creation is tricky, and developers sometimes don't really care about it. If the user code is cleaner there is more chance that a different tool can "do the right thing", applying security fixes, optimizing caches etc. There are multiple options for automation and they will all come with some features related to containers these days. We are just going to look at a couple.
+However, sometimes it is better to leave container creation completely to an automation layer, in which case the user's code might not need to be polluted. Container creation is tricky, and developers sometimes don't really care about it. If the user code is cleaner there is more chance that a different tool can ``do the right thing'', applying security fixes, optimizing caches etc. There are multiple options for automation and they will all come with some features related to containers these days. We are just going to look at a couple.
 
 === Concourse
 
@@ -703,7 +703,7 @@ jobs:
       build: myapp
 ```
 
-The structure of a pipeline is very declarative: you define "resources" (which are either input or output or both), and "jobs" (which use and apply actions to resources). If any of the input resources changes a new build is triggered. If any of the output resources changes during a job, then it is updated.
+The structure of a pipeline is very declarative: you define ``resources'' (which are either input or output or both), and ``jobs'' (which use and apply actions to resources). If any of the input resources changes a new build is triggered. If any of the output resources changes during a job, then it is updated.
 
 The pipeline could be defined in a different place than the application source code. And for a generic build setup the task declarations could be centralized or externalized as well. This allows some separation of concerns between development and automation, if that's the way you roll.
 
@@ -776,11 +776,11 @@ NOTE: The `cloudfoundry/cnb:bionic` builder also knows how to build an image fro
 
 == Knative
 
-Another new project in the container and platform space is https://cloud.google.com/knative/[Knative]. Knative is a lot of things, but if you are not familiar with it you can think of it as a building block for building a serverless platform. It is built on https://kubernetes.io[Kubernetes] so ultimately it consumes container images, and turns them into applications or "services" on the platform. One of the main features it has, though, is the ability to consume source code and build the container for you, making it more developer and operator friendly. https://github.com/knative/build[Knative Build] is the component that does this and is itself a flexible platform for transforming user code into containers - you can do it in pretty much any way you like. Some templates are provided with common patterns like Maven and Gradle builds, and multi-stage docker builds using https://github.com/GoogleContainerTools/kaniko[Kaniko]. There is also a template that use https://github.com/knative/build-templates/tree/master/buildpack[Buildpacks] which is very interesting for us, since buildpacks have always had good support for Spring Boot.
+Another new project in the container and platform space is https://cloud.google.com/knative/[Knative]. Knative is a lot of things, but if you are not familiar with it you can think of it as a building block for building a serverless platform. It is built on https://kubernetes.io[Kubernetes] so ultimately it consumes container images, and turns them into applications or ``services'' on the platform. One of the main features it has, though, is the ability to consume source code and build the container for you, making it more developer and operator friendly. https://github.com/knative/build[Knative Build] is the component that does this and is itself a flexible platform for transforming user code into containers - you can do it in pretty much any way you like. Some templates are provided with common patterns like Maven and Gradle builds, and multi-stage docker builds using https://github.com/GoogleContainerTools/kaniko[Kaniko]. There is also a template that use https://github.com/knative/build-templates/tree/master/buildpack[Buildpacks] which is very interesting for us, since buildpacks have always had good support for Spring Boot.
 
 == Closing
 
-This guide has presented a lot of options for building container images for Spring Boot applications. All of them are completely valid choices, and it is now up to you to decide which one you need. Your first question should be "do I really need to build a container image?" If the answer is "yes" then your choices will likely be driven by efficiency and cacheability, and by separation of concerns. Do you want to insulate developers from needing to know too much about how container images are created? Do you want to make developers responsible for updating images when operating system and middleware vulnerabilities need to be patched? Or maybe developers need complete control over the whole process and they have all the tools and knowledge they need.
+This guide has presented a lot of options for building container images for Spring Boot applications. All of them are completely valid choices, and it is now up to you to decide which one you need. Your first question should be ``do I really need to build a container image?'' If the answer is ``yes'' then your choices will likely be driven by efficiency and cacheability, and by separation of concerns. Do you want to insulate developers from needing to know too much about how container images are created? Do you want to make developers responsible for updating images when operating system and middleware vulnerabilities need to be patched? Or maybe developers need complete control over the whole process and they have all the tools and knowledge they need.
 
 // https://dzone.com/guides/deploying-spring-boot-on-docker
 // https://dzone.com/guides/creating-dual-layer-docker-images-for-spring-boot
