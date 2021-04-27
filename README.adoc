@@ -315,7 +315,7 @@ Every build where the source code changes will be slow because the Maven cache h
 
 === Experimental Features
 
-Docker 18.06 comes with some https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/experimental.md["experimental" features] that includes a way to cache build dependencies. To switch them on you need a flag in the daemon (`dockerd`) and also an environment variable when you run the client, and then you can add a magic first line to your `Dockerfile`:
+Docker 18.06 comes with some https://github.com/moby/buildkit/blob/main/frontend/dockerfile/docs/experimental.md["experimental" features] that includes a way to cache build dependencies. To switch them on you need a flag in the daemon (`dockerd`) and also an environment variable when you run the client, and then you can add a magic first line to your `Dockerfile`:
 
 `Dockerfile`
 [source]
