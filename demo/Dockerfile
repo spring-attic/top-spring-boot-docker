@@ -6,17 +6,20 @@ COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 COPY src src
-
 RUN --mount=type=cache,target=/root/.m2 ./mvnw install -DskipTests
-WORKDIR /workspace/app/target/dependency
-RUN jar -xf ../*.jar
+
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} target/application.jar
+RUN java -Djarmode=layertools -jar target/application.jar extract --destination target/extracted
 
 FROM openjdk:8-jdk-alpine
 RUN addgroup -S demo && adduser -S demo -G demo
 VOLUME /tmp
 USER demo
-ARG DEPENDENCY=/workspace/app/target/dependency
-COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
-COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
-COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
-ENTRYPOINT ["java","-noverify","-XX:TieredStopAtLevel=1","-cp","app:app/lib/*","-Dspring.main.lazy-initialization=true","com.example.demo.DemoApplication"]
+ARG EXTRACTED=/workspace/app/target/extracted
+WORKDIR application
+COPY --from=build ${EXTRACTED}/dependencies/ ./
+COPY --from=build ${EXTRACTED}/spring-boot-loader/ ./
+COPY --from=build ${EXTRACTED}/snapshot-dependencies/ ./
+COPY --from=build ${EXTRACTED}/application/ ./
+ENTRYPOINT ["java","-noverify","-XX:TieredStopAtLevel=1","-Dspring.main.lazy-initialization=true","org.springframework.boot.loader.JarLauncher"]
