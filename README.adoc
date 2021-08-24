@@ -530,7 +530,7 @@ ENTRYPOINT ["java","-cp","app:app/lib/*","hello.Application"]
 ----
 ====
 
-NOTE: While these features are in the experimental phase, the options for switching buildkit on and off depend on the version of `docker` that you us. Check the documentation for the version you have (the example shown earlier is correct for `docker` 18.0.6).
+NOTE: While these features are in the experimental phase, the options for switching buildkit on and off depend on the version of `docker` that you use. Check the documentation for the version you have (the example shown earlier is correct for `docker` 18.0.6).
 
 == Security Aspects
 
