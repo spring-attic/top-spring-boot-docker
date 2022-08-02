@@ -24,12 +24,12 @@ pipeline {
             }
         }
         stage('check REST API'){
-            steps {
-                when {
+            when {
                     expression { sh(returnStdout: true, script: 'curl host.docker.internal:9999').trim() == 'Hello World!' }
                 }
+            steps {
                 script{
-                    sh """ echo sanety check pass """
+                    sh """ echo sanety check """
                 }
             }
         } 
