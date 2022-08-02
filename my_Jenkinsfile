@@ -1,10 +1,10 @@
 pipeline {
     agent any
     stages {
-        stage('Build jar using maven') {
+        stage('Build docker') {
             steps {
                 script {
-                    sh """ demo/./mvnw clean install """
+                    sh """ docker build -t demo demo/. """
         }}}
         
     }
