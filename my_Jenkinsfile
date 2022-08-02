@@ -5,7 +5,9 @@ pipeline {
             steps {
                 script {
                     sh """ docker build -t demo demo/. """
-        }}}
+                }
+            }        
+        }
         
         stage('Run docker'){
             steps {
@@ -13,14 +15,14 @@ pipeline {
                     sh """ docker run -d -p 9999:8080  --name pipelineDemo demo """
                 }
             }
-            }
+        }
         stage('check container running'){
             steps {
                 script{
                     sh """ docker ps  """
                 }
             }
-            }
+        }
         stage('check REST API'){
             steps {
                 script{
@@ -29,11 +31,9 @@ pipeline {
                     """
                 }
             }
-            }
-        }
-        
-        
+        }        
     }
+    
     post {
 		changed {
 			script {
