@@ -31,9 +31,16 @@ pipeline {
                     """
                 }
             }
-        }        
+        } 
+        stage('deleate container'){
+            steps {
+                script{
+                    sh """ docker stop pipelineDemo && docker rm pipelineDemo """
+                }
+            }
+        }       
     }
-    
+
     post {
 		changed {
 			script {
