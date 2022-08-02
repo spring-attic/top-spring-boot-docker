@@ -12,7 +12,7 @@ RUN ./mvnw install -DskipTests
 ARG JAR_FILE=target/*.jar
 RUN pwd 
 RUN ls -la target
-COPY ${JAR_FILE} target/application.jar
+RUN cp -r ${JAR_FILE} target/application.jar
 RUN java -Djarmode=layertools -jar target/application.jar extract --destination target/extracted
 
 FROM openjdk:8-jdk-alpine
