@@ -1,5 +1,11 @@
-node {
-    checkout scm
-    sh 'demo/./mvnw -B -DskipTests clean package'
-    docker.build("myorg/myapp").push()
+pipeline {
+    agent {  label 'master' }
+    stages {
+        stage('Build jar using maven') {
+            steps {
+                script {
+                    sh """ ./mvnw clean install """
+        }}}
+        
+    }
 }
