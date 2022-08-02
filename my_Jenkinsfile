@@ -11,9 +11,9 @@ pipeline {
         }
         // CD
         stage('Run docker'){
-            when {
-                 expression { sh(returnStdout: true, script: 'docker ps -f name=pipelineDemo | awk \'{print $NF}\' | grep -w pipelineDemo').trim() != 'pipelineDemo' }
-            }
+            // when {
+            //      expression { sh(returnStdout: true, script: 'docker ps -f name=pipelineDemo | awk \'{print $NF}\' | grep -w pipelineDemo').trim() != 'pipelineDemo' }
+            // }
             steps {
                 script{
                     sh """ docker run -d -p 9999:8080  --name pipelineDemo demo """
