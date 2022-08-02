@@ -22,10 +22,11 @@ pipeline {
         }
         // TESTING
         stage('check container running'){
+            // when{
+            //     expression { sh(returnStdout: true, script: 'docker ps --filter "status=running" --filter "name=pipelineDemo"').trim() == 'running' }
+            // }
             steps {
-                script{
-                    sh """ docker ps  """
-                }
+                echo pipelineDemo disable 
             }
         }
         stage('check REST call'){
@@ -40,18 +41,18 @@ pipeline {
                 }
             }
         } 
-        stage("test: baseline (jdk8)") {
-			agent {
-				docker {
-					image 'adoptopenjdk/openjdk8:latest'
-					args '-v $HOME/.m2:/tmp/jenkins-home/.m2'
-				}
-			}
-			options { timeout(time: 30, unit: 'MINUTES') }
-			steps {
-				sh 'test/run.sh'
-			}
-		}
+        // stage("test: baseline (jdk8)") {
+		// 	agent {
+		// 		docker {
+		// 			image 'adoptopenjdk/openjdk8:latest'
+		// 			args '-v $HOME/.m2:/tmp/jenkins-home/.m2'
+		// 		}
+		// 	}
+		// 	options { timeout(time: 30, unit: 'MINUTES') }
+		// 	steps {
+		// 		sh 'echo run tests script here'
+		// 	}
+		// }
         // delete the container for new docker run - same name could not be
         stage('deleate container'){
             steps {
@@ -80,31 +81,3 @@ pipeline {
 	}
 }
 
-
-// pipeline {
-//  agent any
-//     stages {
-//         stage('Build jar using maven') {
-//             steps {
-//                 script {
-//                     sh """ ./mvnw clean install """
-//         }}}
-//         stage('Run maven tests') {
-//             steps {
-//                 script {
-//                     sh """ ./mvnw test """
-//                     junit 'target/surefire-reports/*.xml'
-//         }}}
-//         stage('Stop all containers') {
-//             steps {
-//                 script {
-//                     sh './stopDocker.sh'
-//         }}}
-//         stage('Build & run docker image') {
-//             steps {
-//                 script {
-//                     sh """ docker build -t demo ."""
-//                     sh 'docker run -itd -p 80:8080 --name "demo"  demo'
-//         }}}
-//     }
-// }
