@@ -1,6 +1,7 @@
 pipeline {
     agent any
     stages {
+        // CI 
         stage('Build docker') {
             steps {
                 script {
@@ -8,14 +9,18 @@ pipeline {
                 }
             }        
         }
-        
+        // CD
         stage('Run docker'){
+            when {
+
+            }
             steps {
                 script{
                     sh """ docker run -d -p 9999:8080  --name pipelineDemo demo """
                 }
             }
         }
+        // TESTING
         stage('check container running'){
             steps {
                 script{
@@ -23,16 +28,19 @@ pipeline {
                 }
             }
         }
-        stage('check REST API'){
+        stage('check REST call'){
+            // better way is use grovy and use the respond from the web OK code 200
+            // curl host.docker.internal = the IP address of the container (not the jenkins container)
             when {
                     expression { sh(returnStdout: true, script: 'curl host.docker.internal:9999').trim() == 'Hello World!' }
                 }
             steps {
                 script{
-                    sh """ echo sanety check """
+                    sh """ echo sanety check for REST call """
                 }
             }
         } 
+        // delete the container for new docker run - same name could not be
         stage('deleate container'){
             steps {
                 script{
@@ -41,7 +49,22 @@ pipeline {
             }
         }       
     }
+    stages {
+		stage("test: baseline (jdk8)") {
+			agent {
+				docker {
+					image 'adoptopenjdk/openjdk8:latest'
+					args '-v $HOME/.m2:/tmp/jenkins-home/.m2'
+				}
+			}
+			options { timeout(time: 30, unit: 'MINUTES') }
+			steps {
+				sh 'test/run.sh'
+			}
+		}
 
+	}
+    // post to slack the result of the build
     post {
 		changed {
 			script {
