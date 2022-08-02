@@ -4,7 +4,10 @@ pipeline {
         stage('Build docker') {
             steps {
                 script {
-                    sh """ docker build -t demo demo/. """
+                    sh """ 
+                    pwd
+                    ls -la
+                    docker build -t demo demo/. """
         }}}
         
     }
@@ -12,7 +15,7 @@ pipeline {
 
 
 // pipeline {
-//     agent {  label 'master' }
+//  agent any
 //     stages {
 //         stage('Build jar using maven') {
 //             steps {
