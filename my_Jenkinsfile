@@ -1,5 +1,5 @@
 pipeline {
-    agent {  label 'master' }
+    agent any
     stages {
         stage('Build jar using maven') {
             steps {
