@@ -4,12 +4,34 @@ pipeline {
         stage('Build docker') {
             steps {
                 script {
-                    sh """ 
-                    pwd
-                    ls -la
-                    cd demo
-                    docker build -t demo . """
+                    sh """ docker build -t demo demo/. """
         }}}
+        
+        stage('Run docker'){
+            steps {
+                script{
+                    sh """ docker run -d -p 9999:8080  --name pipelineDemo demo """
+                }
+            }
+            }
+        stage('check container running'){
+            steps {
+                script{
+                    sh """ docker ps  """
+                }
+            }
+            }
+        stage('check REST API'){
+            steps {
+                script{
+                    sh """ curl host.docker.internal:9999 
+                    
+                    """
+                }
+            }
+            }
+        }
+        
         
     }
     post {
