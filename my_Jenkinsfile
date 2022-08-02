@@ -4,7 +4,7 @@ pipeline {
         stage('Build jar using maven') {
             steps {
                 script {
-                    sh """ demo/./mvnw clean install """
+                    sh """ demo/./mvnw clean package """
         }}}
         
     }
