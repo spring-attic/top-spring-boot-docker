@@ -26,7 +26,7 @@ pipeline {
             //     expression { sh(returnStdout: true, script: 'docker ps --filter "status=running" --filter "name=pipelineDemo"').trim() == 'running' }
             // }
             steps {
-                echo pipelineDemo disable 
+                sh "echo pipelineDemo disable"
             }
         }
         stage('check REST call'){
