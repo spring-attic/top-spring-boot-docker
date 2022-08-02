@@ -40,17 +40,7 @@ pipeline {
                 }
             }
         } 
-        // delete the container for new docker run - same name could not be
-        stage('deleate container'){
-            steps {
-                script{
-                    sh """ docker stop pipelineDemo && docker rm pipelineDemo """
-                }
-            }
-        }       
-    }
-    stages {
-		stage("test: baseline (jdk8)") {
+        stage("test: baseline (jdk8)") {
 			agent {
 				docker {
 					image 'adoptopenjdk/openjdk8:latest'
@@ -62,8 +52,16 @@ pipeline {
 				sh 'test/run.sh'
 			}
 		}
-
-	}
+        // delete the container for new docker run - same name could not be
+        stage('deleate container'){
+            steps {
+                script{
+                    sh """ docker stop pipelineDemo && docker rm pipelineDemo """
+                }
+            }
+        }       
+    }
+    
     // post to slack the result of the build
     post {
 		changed {
