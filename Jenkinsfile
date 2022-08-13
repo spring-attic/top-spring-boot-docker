@@ -6,13 +6,13 @@ pipeline {
 	
 		stage("first_run") {
 			steps {
-				echo 'testing job...'
+				echo 'testing first stage...'
 			}
 		}
 		
 		stage("middle") {
 			steps {
-				echo 'job works fine.'
+				echo 'middle stage works fine.'
 			}
 		}
 		
