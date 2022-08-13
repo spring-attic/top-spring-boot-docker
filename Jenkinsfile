@@ -1,7 +1,9 @@
 pipeline {
+
 	agent any
 
 	stages {
+	
 		stage("first_run") {
 			steps {
 				echo 'testing job...'
