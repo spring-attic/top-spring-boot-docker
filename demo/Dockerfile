@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:experimental
-FROM openjdk:8-jdk-alpine as build
+FROM eclipse-temurin:17-jdk-alpine as build
 WORKDIR /workspace/app
 
 COPY mvnw .
@@ -12,7 +12,7 @@ ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} target/application.jar
 RUN java -Djarmode=layertools -jar target/application.jar extract --destination target/extracted
 
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 RUN addgroup -S demo && adduser -S demo -G demo
 VOLUME /tmp
 USER demo

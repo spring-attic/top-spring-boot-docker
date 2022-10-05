@@ -22,7 +22,7 @@ A Spring Boot application is easy to convert into an executable JAR file. All th
 ====
 [source]
 ----
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 ARG JAR_FILE
 COPY ${JAR_FILE} app.jar
@@ -54,7 +54,7 @@ Once you have chosen a build system, you don't need the `ARG`. You can hard code
 ====
 [source]
 ----
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 COPY target/*.jar app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]
@@ -89,7 +89,7 @@ The output resembles the following sample output:
 \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
 '  |____| .__|_| |_|_| |_\__, | / / / /
 =========|_|==============|___/=/_/_/_/
- :: Spring Boot ::        (v2.0.2.RELEASE)
+ :: Spring Boot ::        (v2.7.4)
 
 Nov 06, 2018 2:45:16 PM org.springframework.boot.StartupInfoLogger logStarting
 INFO: Starting Application v0.1.0 on b8469cdc9b87 with PID 1 (/app.jar started by root in /)
@@ -142,7 +142,7 @@ The https://docs.docker.com/engine/reference/builder/#exec-form-entrypoint-examp
 ====
 [source]
 ----
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 COPY run.sh .
 COPY target/*.jar app.jar
@@ -167,7 +167,7 @@ Another interesting aspect of the entry point is whether or not you can inject e
 ====
 [source]
 ----
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
@@ -188,7 +188,7 @@ This fails because the `${}` substitution requires a shell. The exec form does n
 ====
 [source]
 ----
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
@@ -216,7 +216,7 @@ That command produces output similar to the following:
 \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
 '  |____| .__|_| |_|_| |_\__, | / / / /
 =========|_|==============|___/=/_/_/_/
- :: Spring Boot ::        (v2.2.0.RELEASE)
+ :: Spring Boot ::        (v2.7.4)
 ...
 2019-10-29 09:12:12.169 DEBUG 1 --- [           main] ConditionEvaluationReportLoggingListener :
 
@@ -250,7 +250,7 @@ That command produces the following output, which shows the port as 8080 rather 
 \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
 '  |____| .__|_| |_|_| |_\__, | / / / /
 =========|_|==============|___/=/_/_/_/
- :: Spring Boot ::        (v2.2.0.RELEASE)
+ :: Spring Boot ::        (v2.7.4)
 ...
 2019-10-29 09:20:19.718  INFO 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 8080
 ----
@@ -262,7 +262,7 @@ It did not work because the docker command (the `--server.port=9000` part) is pa
 ====
 [source]
 ----
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
@@ -290,7 +290,7 @@ As the following output sampe shows, the port does get set to 9000:
 \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
 '  |____| .__|_| |_|_| |_\__, | / / / /
 =========|_|==============|___/=/_/_/_/
- :: Spring Boot ::        (v2.2.0.RELEASE)
+ :: Spring Boot ::        (v2.7.4)
 ...
 2019-10-29 09:30:19.751  INFO 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 9000
 ----
@@ -311,9 +311,9 @@ The docker configuration is very simple so far, and the generated image is not v
 
 === Smaller Images
 
-Notice that the base image in the earlier example is `openjdk:8-jdk-alpine`. The `alpine` images are smaller than the standard `openjdk` library images from https://hub.docker.com/_/openjdk/[Dockerhub]. You can also save about 20MB in the base image by using the `jre` label instead of `jdk`. Not all applications work with a JRE (as opposed to a JDK), but most do. Some organizations enforce a rule that every application has to work with a JRE because of the risk of misuse of some of the JDK features (such as compilation).
+Notice that the base image in the earlier example is `eclipse-temurin:17-jdk-alpine`. The `alpine` images are smaller than the standard `eclipse-temurin` library images from https://hub.docker.com/_/eclipse-temurin/[Dockerhub]. You can also save about 20MB in the base image by using the `jre` label instead of `jdk`. Not all applications work with a JRE (as opposed to a JDK), but most do. Some organizations enforce a rule that every application has to work with a JRE because of the risk of misuse of some of the JDK features (such as compilation).
 
-Another trick that could get you a smaller image is to use https://openjdk.java.net/projects/jigsaw/quick-start#linker[JLink], which is bundled with OpenJDK 11. JLink lets you build a custom JRE distribution from a subset of modules in the full JDK, so you do not need a JRE or JDK in the base image. In principle, this would get you a smaller total image size than using the `openjdk` official docker images. In practice, you cannot (yet) use the `alpine` base image with JDK 11, so your choice of base image is limited and probably results in a larger final image size. Also, a custom JRE in your own base image cannot be shared among other applications, since they would need different customizations. So you might have smaller images for all your applications, but they still take longer to start because they do not benefit from caching the JRE layer.
+Another trick that could get you a smaller image is to use https://openjdk.java.net/projects/jigsaw/quick-start#linker[JLink], which is bundled with OpenJDK 11 and above. JLink lets you build a custom JRE distribution from a subset of modules in the full JDK, so you do not need a JRE or JDK in the base image. In principle, this would get you a smaller total image size than using the official docker images. In practice a custom JRE in your own base image cannot be shared among other applications, since they would need different customizations. So you might have smaller images for all your applications, but they still take longer to start because they do not benefit from caching the JRE layer.
 
 That last point highlights a really important concern for image builders: the goal is not necessarily always going to be to build the smallest image possible. Smaller images are generally a good idea because they take less time to upload and download, but only if none of the layers in them are already cached. Image registries are quite sophisticated these days and you can easily lose the benefit of those features by trying to be clever with the image construction. If you use common base layers, the total size of an image is less of a concern, and it is likely to become even less of a concern as the registries and platforms evolve. Having said that, it is still important, and useful, to try to optimize the layers in our application image. However, the goals should always be to put the fastest changing stuff in the highest layers and to share as many of the large, lower layers as possible with other applications.
 
@@ -337,7 +337,7 @@ Then we can use the following `Dockerfile`
 ====
 [source]
 ----
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 ARG DEPENDENCY=target/dependency
 COPY ${DEPENDENCY}/BOOT-INF/lib /app/lib
@@ -374,7 +374,7 @@ Then we can use the following `Dockerfile`:
 ====
 [source]
 ----
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 ARG EXTRACTED=/workspace/app/target/extracted
 COPY ${EXTRACTED}/dependencies/ ./
@@ -395,14 +395,10 @@ If you want to start your application as quickly as possible (most people do), y
 
 * Use the `spring-context-indexer` (https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-scanning-index[link to docs]). It is not going to add much for small applications, but every little helps.
 * Do not use https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready[actuators] if you can afford not to.
-* Use Spring Boot 2.1 (or later) and Spring 5.1 (or later).
+* Use the latest versions of Spring Boot and Spring.
 * Fix the location of the
 https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-external-config-application-property-files[Spring Boot config file(s)]
 with `spring.config.location` (by command line argument, System property, or other approach).
-* Switch off JMX (you probably do not need it in a container) by setting `spring.jmx.enabled=false`.
-* Run the JVM with `-noverify`. Also consider `-XX:TieredStopAtLevel=1`
-(that will slow down the JIT later but improve startup time).
-* Use the container memory hints for Java 8: `-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap`. With Java 11, this is automatic by default.
 
 Your application might not need a full CPU at runtime, but it does need multiple CPUs to start up as quickly as possible (at least two, four is better). If you do not mind a slower startup, you could throttle the CPUs down below four. If you are forced to start with less than four CPUs, it might help to set `-Dspring.backgroundpreinitializer.ignore=true`, since it prevents Spring Boot from creating a new thread that it probably cannot use (this works with Spring Boot 2.1.0 and above).
 
@@ -414,7 +410,7 @@ The `Dockerfile` shown in <<a-better-dockerfile>> assumed that the fat JAR was a
 ====
 [source]
 ----
-FROM openjdk:8-jdk-alpine as build
+FROM eclipse-temurin:17-jdk-alpine as build
 WORKDIR /workspace/app
 
 COPY mvnw .
@@ -425,7 +421,7 @@ COPY src src
 RUN ./mvnw install -DskipTests
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 ARG DEPENDENCY=/workspace/app/target/dependency
 COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
@@ -460,7 +456,7 @@ The `RUN` directive then accepts a new flag: `--mount`. The following listing sh
 [source]
 ----
 # syntax=docker/dockerfile:experimental
-FROM openjdk:8-jdk-alpine as build
+FROM eclipse-temurin:17-jdk-alpine as build
 WORKDIR /workspace/app
 
 COPY mvnw .
@@ -471,7 +467,7 @@ COPY src src
 RUN --mount=type=cache,target=/root/.m2 ./mvnw install -DskipTests
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 ARG DEPENDENCY=/workspace/app/target/dependency
 COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
@@ -513,14 +509,14 @@ The Gradle version of this `Dockerfile` configuration is very similar:
 [source]
 ----
 # syntax=docker/dockerfile:experimental
-FROM openjdk:8-jdk-alpine AS build
+FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /workspace/app
 
 COPY . /workspace/app
 RUN --mount=type=cache,target=/root/.gradle ./gradlew clean build
 RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
 
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 ARG DEPENDENCY=/workspace/app/build/dependency
 COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
@@ -542,7 +538,7 @@ In a `Dockerfile`, you can achieve this by adding another layer that adds a (sys
 ====
 [source]
 ----
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 
 RUN addgroup -S demo && adduser -S demo -G demo
 USER demo
@@ -563,7 +559,7 @@ Another consideration is that the full JDK is probably not needed by most applic
 ====
 [source]
 ----
-FROM openjdk:8-jre-alpine
+FROM eclipse-temurin:17-jre-alpine
 
 ...
 ----
@@ -772,27 +768,6 @@ The gradle plugin has similar features, once you have it in your `build.gradle`:
 plugins {
   ...
   id 'com.google.cloud.tools.jib' version '1.8.0'
-}
-----
-====
-
-The following listing uses the older Gradle style used in the Getting Started Guides:
-
-`build.gradle`
-====
-[source,groovy]
-----
-buildscript {
-    repositories {
-      maven {
-        url "https://plugins.gradle.org/m2/"
-      }
-      mavenCentral()
-    }
-    dependencies {
-        classpath('org.springframework.boot:spring-boot-gradle-plugin:2.2.1.RELEASE')
-        classpath('com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:1.8.0')
-    }
 }
 ----
 ====
