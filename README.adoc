@@ -680,7 +680,7 @@ Alternatively, you change the `pom.xml` file:
 
 === Palantir Gradle Plugin
 
-The https://github.com/palantir/gradle-docker[Palantir Gradle Plugin] works with a `Dockerfile` and can aslo generate a `Dockerfile` for you. Then it runs `docker` as if you were running it on the command line.
+The https://github.com/palantir/gradle-docker[Palantir Gradle Plugin] works with a `Dockerfile` and can also generate a `Dockerfile` for you. Then it runs `docker` as if you were running it on the command line.
 
 First you need to import the plugin into your `build.gradle`:
 
@@ -1018,7 +1018,7 @@ NOTE: The `paketobuildpacks/builder:base` builder also knows how to build an ima
 
 == Knative
 
-Another new project in the container and platform space is https://cloud.google.com/knative/[Knative]. If you are not familiar with it, you can think of it as a building block for building a serverless platform. It is built on https://kubernetes.io[Kubernetes], so, ultimately, it consumes container images and turns them into applications or "`services`" on the platform. One of the main features it has, though, is the ability to consume source code and build the container for you, making it more developer- and operator-friendly. https://github.com/knative/build[Knative Build] is the component that does this and is itself a flexible platform for transforming user code into containers -- you can do it in pretty much any way you like. Some templates are provided with common patterns (such aS Maven and Gradle builds) and multi-stage docker builds using https://github.com/GoogleContainerTools/kaniko[Kaniko]. There is also a template that uses https://github.com/knative/build-templates/tree/master/buildpacks[Buildpacks], which is interesting for us, since buildpacks have always had good support for Spring Boot.
+Another new project in the container and platform space is https://cloud.google.com/knative/[Knative]. If you are not familiar with it, you can think of it as a building block for building a serverless platform. It is built on https://kubernetes.io[Kubernetes], so, ultimately, it consumes container images and turns them into applications or "`services`" on the platform. One of the main features it has, though, is the ability to consume source code and build the container for you, making it more developer- and operator-friendly. https://github.com/knative/build[Knative Build] is the component that does this and is itself a flexible platform for transforming user code into containers -- you can do it in pretty much any way you like. Some templates are provided with common patterns (such as Maven and Gradle builds) and multi-stage docker builds using https://github.com/GoogleContainerTools/kaniko[Kaniko]. There is also a template that uses https://github.com/knative/build-templates/tree/master/buildpacks[Buildpacks], which is interesting for us, since buildpacks have always had good support for Spring Boot.
 
 == Closing
 
