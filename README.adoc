@@ -514,7 +514,7 @@ WORKDIR /workspace/app
 
 COPY . /workspace/app
 RUN --mount=type=cache,target=/root/.gradle ./gradlew clean build
-RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
+RUN mkdir -p build/dependency && (cd build/dependency; find ../libs -name "*.jar" -exec jar -xf {} \;)
 
 FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
