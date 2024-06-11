@@ -37,7 +37,7 @@ You could pass in the `JAR_FILE` as part of the `docker` command (it differs for
 ====
 [source,bash]
 ----
-docker build --build-arg JAR_FILE=target/*.jar -t myorg/myapp .
+docker build --build-arg JAR_FILE=target/\*.jar -t myorg/myapp .
 ----
 ====
 
@@ -46,7 +46,7 @@ For Gradle, the following command works:
 ====
 [source,bash]
 ----
-docker build --build-arg JAR_FILE=build/libs/*.jar -t myorg/myapp .
+docker build --build-arg JAR_FILE=build/libs/\*.jar -t myorg/myapp .
 ----
 ====
 
@@ -148,7 +148,7 @@ FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 COPY run.sh .
 COPY target/*.jar app.jar
-ENTRYPOINT ["run.sh"]
+ENTRYPOINT ["./run.sh"]
 ----
 ====
 
@@ -268,7 +268,7 @@ FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
-ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app.jar ${0} ${@}"]
+ENTRYPOINT ["sh", "-c", "java -jar /app.jar ${0} ${@}"]
 ----
 ====
 
